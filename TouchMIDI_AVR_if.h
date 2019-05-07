@@ -38,6 +38,7 @@ public:
   uint16_t  gtOld( void ) const { return _gtOld;}
   void      setTimer100ms( uint16_t tm ){ _timer100msec = tm;}
   uint16_t  timer100ms( void ) const { return _timer100msec;}
+  uint16_t  timer1s( void ) const { return _timer1sec;}
 
   void      clearAllTimerEvent( void ){ _timer10msec_event = _timer100msec_event = _timer1sec_event = false;}
   bool      timer10msecEvent( void ) const { return _timer10msec_event;}

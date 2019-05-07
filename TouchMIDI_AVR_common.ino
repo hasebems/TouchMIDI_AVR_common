@@ -30,13 +30,16 @@
 #define PIN 2
 Adafruit_NeoPixel led = Adafruit_NeoPixel(MAX_LED, PIN, NEO_GRB + NEO_KHZ800);
 
+#define RED_LED   6
+#define GREEN_LED 7
+
 //  Touch Sensor
 uint16_t swState[2];
 GlobalTimer gt;
 
 /*----------------------------------------------------------------------------*/
 #ifdef USE_SIX_TOUCH_SENS
-static MagicFlute st;
+static MagicFlute mf;
 #endif
 
 /*----------------------------------------------------------------------------*/
@@ -60,12 +63,15 @@ void setup()
   }
 
   //  Initialize Hardware
-  pinMode(6, OUTPUT);   // LED
-  pinMode(7, OUTPUT);   // LED
-  digitalWrite(6, LOW);
-  digitalWrite(7, LOW);
+  pinMode(RED_LED, OUTPUT);   // LED
+  pinMode(GREEN_LED, OUTPUT);   // LED
+  digitalWrite(RED_LED, LOW);
+  digitalWrite(GREEN_LED, LOW);
   wireBegin();
   Serial.begin(31250);
+
+  pinMode(5,OUTPUT);    //
+  digitalWrite(5,HIGH);  //  Mute
 
 #ifdef USE_ADA88
  #ifdef USE_PCA9544A
@@ -81,27 +87,27 @@ void setup()
   //  Two MBR3110
   pca9544_changeI2cBus(1);
   err = MBR3110_init(0);
-  digitalWrite(7, HIGH);
+  digitalWrite(RED_LED, HIGH);
   if ( err ){ while(1){ setAda88_Number(err);}}
 
   pca9544_changeI2cBus(2);
   err = MBR3110_init(1);
-  digitalWrite(7, LOW);
+  digitalWrite(RED_LED, LOW);
   if ( err ){ while(1){ setAda88_Number(err+1000);}}
  #else
   //  One MBR3110
   err = MBR3110_init();
-  if ( err ){ while(1){ digitalWrite(7, HIGH); setAda88_Number(err);}}
+  if ( err ){ while(1){ digitalWrite(RED_LED, HIGH); setAda88_Number(err);}}
  #endif
 #else
   //  No CY8CMBR3110
 #endif
 
-  setAda88_Number(888);
-
   //  Set NeoPixel Library 
   led.begin();
   led.show(); // Initialize all pixels to 'off'
+
+  digitalWrite(5,LOW);  //  Mute Off
 
   //  Set Interrupt
   MsTimer2::set(10, flash);     // 10ms Interval Timer Interrupt
@@ -115,7 +121,8 @@ void loop()
 
   //  Touch Sensor
 #ifdef USE_SIX_TOUCH_SENS
-  st.checkSixTouch();
+  int prs = mf.checkSixTouch_AndAirPressure();
+  setAda88_Number(prs);
 #endif
 
 #ifdef USE_TWELVE_TOUCH_SENS
@@ -148,13 +155,18 @@ void generateTimer( void )
   gt.clearAllTimerEvent();
   gt.updateTimer(diff);
 
-  if ( gt._timer100msec_event == true ){
+  if ( gt.timer100msecEvent() == true ){
 #ifdef USE_SIX_TOUCH_SENS    
-    st.periodic100msec();
+    mf.periodic100msec();
 #endif
 #ifdef USE_TWELVE_TOUCH_SENS
     hcb.periodic100msec();   
 #endif
+  }
+
+  if ( gt.timer100msecEvent() == true ){
+    // blink LED
+    (gt.timer100ms() & 0x0002)? digitalWrite(GREEN_LED, HIGH):digitalWrite(GREEN_LED, LOW);
   }
 }
 /*----------------------------------------------------------------------------*/

@@ -34,7 +34,7 @@ public:
   void    setNewTouch( uint8_t tch );
   uint8_t getNewNote( void );
   bool    catchEventOfPeriodic( uint8_t& midiValue, uint32_t crntTime );
-  void    checkSixTouch( void );
+  int     checkSixTouch_AndAirPressure( void );
 
   void    setCrntNote( uint8_t nt ){ _crntNote = nt;}
   uint8_t crntNote( void ) const { return _crntNote;}
@@ -46,7 +46,7 @@ public:
 
 private:
   void    analyseSixTouchSens( uint8_t tch );
-  void    checkAir( void );
+  int     midiOutAirPressure( void );
   void    setNeoPixelExp( uint8_t note, uint8_t exprs );
   
   static const unsigned char swTable[64];
